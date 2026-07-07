@@ -1,3 +1,5 @@
+import { corsHeaders } from "./cors.ts";
+
 export class HttpError extends Error {
   status: number;
 
@@ -13,6 +15,6 @@ export function toErrorResponse(e: unknown, headers: HeadersInit = {}) {
 
   return new Response(JSON.stringify({ error: message }), {
     status,
-    headers: { "Content-Type": "application/json", ...headers },
+    headers: { "Content-Type": "application/json", ...corsHeaders, ...headers },
   });
 }
