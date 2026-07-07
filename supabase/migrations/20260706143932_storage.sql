@@ -1,5 +1,11 @@
-insert into storage.buckets (id, name, public)
-values ('product-images', 'product-images', false);
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+    'product-images',
+    'product-images',
+    false,
+    5242880, -- 5 MB
+    array['image/png', 'image/jpeg', 'image/webp', 'image/gif']
+);
 
 create policy "product_images_select_team"
     on storage.objects for select

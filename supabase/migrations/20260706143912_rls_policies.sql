@@ -15,6 +15,18 @@ create policy "profiles_update_self"
     using (id = (select auth.uid()))
     with check (id = (select auth.uid()));
 
+-- profiles_update_self's `using`/`with check` only guard *which row* can be
+-- touched, not *which columns* — without this, a client could PATCH their
+-- own team_id directly via PostgREST, bypassing create_team/join_team
+-- entirely (no invite code, no "already has a team" guard) and instantly
+-- gaining RLS access to any team whose id they know. Column-level GRANTs are
+-- enforced independently of RLS, so restricting to the two genuinely
+-- self-editable columns closes this without touching the policy itself.
+-- create_team/join_team are unaffected: they run security definer as the
+-- table owner, which isn't subject to authenticated's column grants.
+revoke update on public.profiles from authenticated;
+grant update (display_name, avatar_url) on public.profiles to authenticated;
+
 create policy "teams_select_own"
     on public.teams for select
     to authenticated

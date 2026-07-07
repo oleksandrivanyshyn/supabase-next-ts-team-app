@@ -25,10 +25,18 @@ Deno.serve(async (req: Request) => {
             .delete()
             .eq("status", "deleted")
             .lte("deleted_at", twoWeeksAgo.toISOString())
-            .select("id");
+            .select("id, image_path");
 
         if (error) {
             throw new HttpError(400, error.message);
+        }
+
+        const imagePaths = data?.map(p => p.image_path).filter(Boolean) as string[] || [];
+        if (imagePaths.length > 0) {
+            const { error: storageError } = await supabaseAdmin.storage
+                .from("product-images")
+                .remove(imagePaths);
+            if (storageError) console.error("Failed to remove product images:", storageError.message);
         }
 
         const deletedCount = data?.length || 0;
