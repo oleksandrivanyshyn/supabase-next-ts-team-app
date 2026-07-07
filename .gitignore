@@ -28,3 +28,6 @@ supabase/.env
 # Supabase local dev
 supabase/.branches
 supabase/.temp
+supabase/snippets/
+
+.http
