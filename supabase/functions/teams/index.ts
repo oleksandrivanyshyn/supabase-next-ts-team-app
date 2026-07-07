@@ -1,0 +1,80 @@
+import { corsHeaders } from "../_shared/cors.ts";
+import { createContext } from "../_shared/context.ts";
+import { HttpError, toErrorResponse } from "../_shared/errors.ts";
+import { createTeamSchema, joinTeamSchema } from "./schemas.ts";
+
+function toTeamDto(team: Record<string, any>) {
+    return {
+        id: team.id,
+        name: team.name,
+        inviteCode: team.invite_code,
+        createdAt: team.created_at,
+    };
+}
+
+Deno.serve(async (req: Request) => {
+    if (req.method === "OPTIONS") {
+        return new Response("ok", { headers: corsHeaders });
+    }
+
+    try {
+        const ctx = await createContext(req);
+        const url = new URL(req.url);
+        const path = url.pathname.replace(/\/+$/, "");
+
+        if (ctx.teamId) {
+            throw new HttpError(409, "User already belongs to a team");
+        }
+
+        if (req.method === "POST" && (path === "/teams" || path === "/")) {
+            const body = await req.json().catch(() => ({}));
+
+            const result = createTeamSchema.safeParse(body);
+            if (!result.success) {
+                throw new HttpError(400, "Validation failed: " + result.error.message);
+            }
+
+            const { data: team, error: rpcError } = await ctx.supabase.rpc("create_team", {
+                p_name: result.data.name,
+            }).single();
+
+            if (rpcError) {
+                const status = rpcError.code === "23505" ? 409 : 400;
+                throw new HttpError(status, rpcError.message);
+            }
+
+            return new Response(JSON.stringify({ team: toTeamDto(team as Record<string, any>) }), {
+                status: 201,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        if (req.method === "POST" && path.endsWith("/join")) {
+            const body = await req.json().catch(() => ({}));
+
+            const result = joinTeamSchema.safeParse(body);
+            if (!result.success) {
+                throw new HttpError(400, "Validation failed: " + result.error.message);
+            }
+
+            const { data: team, error: rpcError } = await ctx.supabase.rpc("join_team", {
+                p_invite_code: result.data.inviteCode,
+            }).single();
+
+            if (rpcError) {
+                const status = rpcError.code === "P0002" ? 404 : 400;
+                throw new HttpError(status, rpcError.message);
+            }
+
+            return new Response(JSON.stringify({ team: toTeamDto(team as Record<string, any>) }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        throw new HttpError(404, "Not Found");
+
+    } catch (error) {
+        return toErrorResponse(error);
+    }
+});
