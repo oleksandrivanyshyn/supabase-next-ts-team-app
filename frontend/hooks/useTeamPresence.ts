@@ -42,6 +42,9 @@ export function useTeamPresence(teamId?: string, me?: Me) {
     return () => {
       channel.unsubscribe();
     };
+    // Depend on the primitive fields, not the `me` object identity, so a new
+    // object reference each render doesn't tear down and rejoin the channel.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId, me?.id, me?.displayName, me?.avatarUrl]);
 
   return { members: Object.values(members) };
