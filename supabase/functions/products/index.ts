@@ -80,7 +80,14 @@ Deno.serve(async (req: Request) => {
             if (status) query = query.eq("status", status);
             if (createdBy) query = query.eq("created_by", createdBy);
             if (dateFrom) query = query.gte("created_at", dateFrom);
-            if (dateTo) query = query.lte("created_at", dateTo);
+            if (dateTo) {
+                // The UI sends dateTo as a calendar day (yyyy-MM-dd). Left as-is
+                // it compares against 00:00, silently excluding rows created
+                // later that same day — extend to end-of-day so the range is
+                // inclusive of the whole picked day.
+                const upperBound = /^\d{4}-\d{2}-\d{2}$/.test(dateTo) ? `${dateTo}T23:59:59.999Z` : dateTo;
+                query = query.lte("created_at", upperBound);
+            }
             if (search) query = query.textSearch("fts", search, { type: "websearch", config: "simple" });
 
             const from = (page - 1) * pageSize;
