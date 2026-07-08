@@ -12,3 +12,13 @@ export const updateProductSchema = z.object({
     imagePath: z.string().optional(),
     status: z.enum(["active", "deleted"]).optional(),
 });
+
+const isoDateLike = z.string().refine((v) => !Number.isNaN(Date.parse(v)), "Invalid date");
+
+export const productListQuerySchema = z.object({
+    status: z.enum(["draft", "active", "deleted"]).optional(),
+    dateFrom: isoDateLike.optional(),
+    dateTo: isoDateLike.optional(),
+    createdBy: z.string().uuid().optional(),
+    search: z.string().optional(),
+});

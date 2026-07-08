@@ -1,7 +1,19 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { createContext, requireTeam } from "../_shared/context.ts";
 import { HttpError, toErrorResponse } from "../_shared/errors.ts";
-import { createProductSchema, updateProductSchema } from "./schemas.ts";
+import { createProductSchema, productListQuerySchema, updateProductSchema } from "./schemas.ts";
+
+// Locally, the auto-injected SUPABASE_URL resolves to the internal Docker
+// network hostname (e.g. http://kong:8000), which a real browser can't reach —
+// only Edge Functions calling Storage/PostgREST server-side can. Signed URLs
+// built from that client inherit the same unreachable origin. PUBLIC_SUPABASE_URL
+// (set locally to http://127.0.0.1:54321, unset in production where SUPABASE_URL
+// is already public) rewrites the origin before a signed URL reaches the client.
+function toPublicUrl(url: string): string {
+    const publicOrigin = Deno.env.get("PUBLIC_SUPABASE_URL");
+    if (!publicOrigin) return url;
+    return url.replace(/^https?:\/\/[^/]+/, publicOrigin);
+}
 
 function mapProductRow(product: Record<string, any>, imageUrl: string | null) {
     return {
@@ -24,7 +36,7 @@ async function toProductDto(supabase: any, product: Record<string, any>) {
             .from("product-images")
             .createSignedUrl(product.image_path, 3600);
         if (storageError) console.error("Failed to sign product image URL:", storageError.message);
-        imageUrl = signedData?.signedUrl ?? null;
+        imageUrl = signedData?.signedUrl ? toPublicUrl(signedData.signedUrl) : null;
     }
 
     return mapProductRow(product, imageUrl);
@@ -43,16 +55,22 @@ Deno.serve(async (req: Request) => {
         const path = url.pathname.replace(/\/+$/, "");
         const segments = path.split("/").filter(Boolean);
 
-        if (req.method === "GET" && (segments.length === 1 || segments[0] === "products" && segments.length === 1)) {
+        if (req.method === "GET" && segments.length === 1) {
             const parsedPage = parseInt(url.searchParams.get("page") || "1", 10);
             const page = Math.max(1, Number.isNaN(parsedPage) ? 1 : parsedPage);
             const parsedPageSize = parseInt(url.searchParams.get("pageSize") || "20", 10);
             const pageSize = Math.min(100, Math.max(1, Number.isNaN(parsedPageSize) ? 20 : parsedPageSize));
-            const status = url.searchParams.get("status");
-            const dateFrom = url.searchParams.get("dateFrom");
-            const dateTo = url.searchParams.get("dateTo");
-            const createdBy = url.searchParams.get("createdBy");
-            const search = url.searchParams.get("search");
+
+            const queryParams: Record<string, string> = {};
+            for (const key of ["status", "dateFrom", "dateTo", "createdBy", "search"]) {
+                const value = url.searchParams.get(key);
+                if (value) queryParams[key] = value;
+            }
+            const parsedQuery = productListQuerySchema.safeParse(queryParams);
+            if (!parsedQuery.success) {
+                throw new HttpError(400, "Validation failed: " + parsedQuery.error.message);
+            }
+            const { status, dateFrom, dateTo, createdBy, search } = parsedQuery.data;
 
             let query = ctx.supabase
                 .from("products")
@@ -70,7 +88,8 @@ Deno.serve(async (req: Request) => {
 
             const { data: products, count, error } = await query
                 .range(from, to)
-                .order("created_at", { ascending: false });
+                .order("created_at", { ascending: false })
+                .order("id", { ascending: false });
 
             if (error) throw new HttpError(400, error.message);
 
@@ -88,7 +107,7 @@ Deno.serve(async (req: Request) => {
                 if (!storageError && signedData) {
                     signedUrlsMap = signedData.reduce((acc, current) => {
                         if (current.path && current.signedUrl) {
-                            acc[current.path] = current.signedUrl;
+                            acc[current.path] = toPublicUrl(current.signedUrl);
                         }
                         return acc;
                     }, {} as Record<string, string>);
@@ -127,7 +146,7 @@ Deno.serve(async (req: Request) => {
                 if (storageError) console.error("Failed to sign product image URL:", storageError.message);
 
                 if (!storageError && signedData) {
-                    imageUrl = signedData.signedUrl;
+                    imageUrl = toPublicUrl(signedData.signedUrl);
                 }
             }
 
