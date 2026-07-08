@@ -24,3 +24,23 @@ export type ProductListResponse = {
   page: number;
   pageSize: number;
 };
+
+export type TeamMember = {
+  id: string;
+  displayName: string;
+};
+
+export type ProductFilters = {
+  status?: ProductStatus;
+  dateFrom?: string;
+  dateTo?: string;
+  createdBy?: string;
+  search?: string;
+};
+
+export type PresenceMember = {
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  onlineAt: string;
+};
