@@ -31,7 +31,7 @@ create table public.products (
 );
 
 create index idx_profiles_team_id     on public.profiles(team_id);
-create index idx_products_team_id     on public.products(team_id);
+create index idx_products_team_created on public.products(team_id, created_at desc);
 create index idx_products_status      on public.products(status);
 create index idx_products_created_at on public.products(created_at);
 create index idx_products_created_by on public.products(created_by);
