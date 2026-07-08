@@ -135,6 +135,10 @@ begin
         NEW.deleted_at := now();
     end if;
 
+    -- authorship/team are set once on insert; block spoofing via a crafted update body
+    NEW.created_by := OLD.created_by;
+    NEW.team_id := OLD.team_id;
+
     NEW.updated_at := now();
     return NEW;
 end;
