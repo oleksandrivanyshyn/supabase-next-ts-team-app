@@ -9,6 +9,11 @@ const PUBLIC_ROUTES = [
   "/auth/callback",
 ];
 
+// Excludes /reset-password on purpose: reaching it requires the session
+// established by the recovery link's /auth/callback exchange, so bouncing
+// it here would make the page unreachable.
+const BOUNCE_IF_AUTHED_ROUTES = ["/login", "/signup", "/forgot-password"];
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -44,6 +49,16 @@ export async function updateSession(request: NextRequest) {
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  const isBounceRoute = BOUNCE_IF_AUTHED_ROUTES.some((route) =>
+    request.nextUrl.pathname.startsWith(route),
+  );
+
+  if (user && isBounceRoute) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/products";
     return NextResponse.redirect(url);
   }
 
