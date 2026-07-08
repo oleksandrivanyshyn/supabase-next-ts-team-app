@@ -143,21 +143,7 @@ Deno.serve(async (req: Request) => {
 
             if (error || !product) throw new HttpError(404, "Product not found");
 
-            let imageUrl: string | null = null;
-            if (product.image_path) {
-                const { data: signedData, error: storageError } = await ctx.supabase
-                    .storage
-                    .from("product-images")
-                    .createSignedUrl(product.image_path, 3600);
-
-                if (storageError) console.error("Failed to sign product image URL:", storageError.message);
-
-                if (!storageError && signedData) {
-                    imageUrl = toPublicUrl(signedData.signedUrl);
-                }
-            }
-
-            return new Response(JSON.stringify({ product: mapProductRow(product, imageUrl) }), {
+            return new Response(JSON.stringify({ product: await toProductDto(ctx.supabase, product) }), {
                 status: 200,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
