@@ -1,9 +1,13 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { createContext } from "../_shared/context.ts";
 import { HttpError, toErrorResponse } from "../_shared/errors.ts";
+import type { Database } from "../_shared/database.types.ts";
 import { createTeamSchema, joinTeamSchema } from "./schemas.ts";
 
-function toTeamDto(team: Record<string, any>) {
+type TeamRow = Database["public"]["Tables"]["teams"]["Row"];
+type TeamDto = { id: string; name: string; inviteCode: string; createdAt: string; createdBy: string };
+
+function toTeamDto(team: TeamRow): TeamDto {
     return {
         id: team.id,
         name: team.name,
@@ -81,7 +85,7 @@ Deno.serve(async (req: Request) => {
                 throw new HttpError(status, rpcError.message);
             }
 
-            return new Response(JSON.stringify({ team: toTeamDto(team as Record<string, any>) }), {
+            return new Response(JSON.stringify({ team: toTeamDto(team) }), {
                 status: 201,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
@@ -104,7 +108,7 @@ Deno.serve(async (req: Request) => {
                 throw new HttpError(status, rpcError.message);
             }
 
-            return new Response(JSON.stringify({ team: toTeamDto(team as Record<string, any>) }), {
+            return new Response(JSON.stringify({ team: toTeamDto(team) }), {
                 status: 200,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });

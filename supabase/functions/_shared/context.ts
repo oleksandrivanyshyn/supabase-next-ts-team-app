@@ -16,7 +16,7 @@ export async function createContext(req: Request) {
     throw new HttpError(500, "Failed to load user profile");
   }
 
-  return { supabase, user, teamId: (profile?.team_id as string | null) ?? null };
+  return { supabase, user, teamId: profile?.team_id ?? null };
 }
 
 export type Context = Awaited<ReturnType<typeof createContext>>;

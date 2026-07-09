@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { HttpError } from "./errors.ts";
+import type { Database } from "./database.types.ts";
 
-export async function getAuthedUser(supabase: SupabaseClient) {
+export async function getAuthedUser(supabase: SupabaseClient<Database>) {
   const {
     data: { user },
     error,

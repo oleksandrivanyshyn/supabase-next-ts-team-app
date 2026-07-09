@@ -1,7 +1,25 @@
+import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createContext, requireTeam } from "../_shared/context.ts";
 import { HttpError, toErrorResponse } from "../_shared/errors.ts";
+import type { Database } from "../_shared/database.types.ts";
 import { createProductSchema, productListQuerySchema, updateProductSchema } from "./schemas.ts";
+
+type ProductRow = Database["public"]["Tables"]["products"]["Row"] & {
+    profiles: { display_name: string } | null;
+};
+type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
+
+type ProductDto = {
+    id: string;
+    title: string;
+    description: string;
+    imageUrl: string | null;
+    status: Database["public"]["Enums"]["product_status"];
+    createdBy: { id: string; displayName: string };
+    createdAt: string;
+    updatedAt: string;
+};
 
 // Locally, the auto-injected SUPABASE_URL resolves to the internal Docker
 // network hostname (e.g. http://kong:8000), which a real browser can't reach —
@@ -15,20 +33,26 @@ function toPublicUrl(url: string): string {
     return url.replace(/^https?:\/\/[^/]+/, publicOrigin);
 }
 
-function mapProductRow(product: Record<string, any>, imageUrl: string | null) {
+function mapProductRow(product: ProductRow, imageUrl: string | null): ProductDto {
     return {
         id: product.id,
         title: product.title,
         description: product.description,
         imageUrl,
         status: product.status,
-        createdBy: { id: product.created_by, displayName: product.profiles?.display_name ?? null },
+        // profiles is nullable in the generated embed type (Supabase can't
+        // statically prove the join always resolves), but created_by is a
+        // not-null FK into profiles and every user gets a profile row via
+        // the handle_new_user trigger on signup — this can't actually be
+        // null in practice, so asserting it here is more honest than
+        // quietly coalescing to null and pretending that's a normal state.
+        createdBy: { id: product.created_by, displayName: product.profiles!.display_name },
         createdAt: product.created_at,
         updatedAt: product.updated_at,
     };
 }
 
-async function toProductDto(supabase: any, product: Record<string, any>) {
+async function toProductDto(supabase: SupabaseClient<Database>, product: ProductRow): Promise<ProductDto> {
     let imageUrl: string | null = null;
     if (product.image_path) {
         const { data: signedData, error: storageError } = await supabase
@@ -100,7 +124,7 @@ Deno.serve(async (req: Request) => {
 
             if (error) throw new HttpError(400, error.message);
 
-            const imagePaths = products?.map(p => p.image_path).filter(Boolean) || [];
+            const imagePaths = products?.map(p => p.image_path).filter((p): p is string => Boolean(p)) || [];
             let signedUrlsMap: Record<string, string> = {};
 
             if (imagePaths.length > 0) {
@@ -200,7 +224,7 @@ Deno.serve(async (req: Request) => {
                 throw new HttpError(409, "Active or deleted products cannot be edited, only their status can change");
             }
 
-            const updateData: Record<string, any> = {};
+            const updateData: ProductUpdate = {};
             if (result.data.title !== undefined) updateData.title = result.data.title;
             if (result.data.description !== undefined) updateData.description = result.data.description;
             if (result.data.imagePath !== undefined) updateData.image_path = result.data.imagePath || null;

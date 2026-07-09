@@ -31,7 +31,7 @@ Deno.serve(async (req: Request) => {
             throw new HttpError(400, error.message);
         }
 
-        const imagePaths = data?.map(p => p.image_path).filter(Boolean) as string[] || [];
+        const imagePaths = data?.map(p => p.image_path).filter((p): p is string => Boolean(p)) || [];
         if (imagePaths.length > 0) {
             const { error: storageError } = await supabaseAdmin.storage
                 .from("product-images")
