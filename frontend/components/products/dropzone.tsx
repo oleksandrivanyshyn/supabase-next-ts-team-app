@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle, File, Loader2, Upload, X } from "lucide-react";
+import Image from "next/image";
 import { createContext, useCallback, useContext, type PropsWithChildren } from "react";
 
 import { cn } from "@/lib/utils";
@@ -108,8 +109,7 @@ const DropzoneContent = ({ className }: { className?: string }) => {
           >
             {file.type.startsWith("image/") ? (
               <div className="h-10 w-10 rounded-sm border overflow-hidden shrink-0 bg-muted flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={file.preview} alt={file.name} className="object-cover" />
+                <Image src={file.preview!} alt={file.name} width={40} height={40} className="object-cover" />
               </div>
             ) : (
               <div className="h-10 w-10 rounded-sm border bg-muted flex items-center justify-center">
