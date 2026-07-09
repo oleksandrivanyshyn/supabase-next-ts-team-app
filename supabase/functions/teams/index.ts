@@ -9,6 +9,7 @@ function toTeamDto(team: Record<string, any>) {
         name: team.name,
         inviteCode: team.invite_code,
         createdAt: team.created_at,
+        createdBy: team.created_by,
     };
 }
 
@@ -22,8 +23,9 @@ Deno.serve(async (req: Request) => {
         const url = new URL(req.url);
         const path = url.pathname.replace(/\/+$/, "");
 
-        // Leave requires the opposite guard from create/join (must HAVE a team),
-        // so it's handled before the "already belongs to a team" check below.
+        // Leave and delete require the opposite guard from create/join (must
+        // HAVE a team), so both are handled before the "already belongs to a
+        // team" check below.
         if (req.method === "POST" && path.endsWith("/leave")) {
             if (!ctx.teamId) {
                 throw new HttpError(409, "User does not belong to a team");
@@ -32,6 +34,23 @@ Deno.serve(async (req: Request) => {
             const { error: rpcError } = await ctx.supabase.rpc("leave_team");
             if (rpcError) {
                 const status = rpcError.code === "P0002" ? 409 : 400;
+                throw new HttpError(status, rpcError.message);
+            }
+
+            return new Response(JSON.stringify({ success: true }), {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
+        if (req.method === "POST" && path.endsWith("/delete")) {
+            if (!ctx.teamId) {
+                throw new HttpError(409, "User does not belong to a team");
+            }
+
+            const { error: rpcError } = await ctx.supabase.rpc("delete_team");
+            if (rpcError) {
+                const status = rpcError.code === "P0002" ? 409 : rpcError.code === "42501" ? 403 : 400;
                 throw new HttpError(status, rpcError.message);
             }
 
