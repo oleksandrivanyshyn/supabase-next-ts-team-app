@@ -149,8 +149,15 @@ supabase functions deploy teams products cron-cleanup
 supabase secrets set CRON_SECRET=<random>          # + Google secrets if used
 ```
 
+> **Redeploy functions after any code change.** `supabase db push` only ships
+> migrations; Edge Function code (including anything in `functions/_shared/`)
+> reaches the hosted project **only** through `supabase functions deploy`.
+> A committed fix that isn't deployed does nothing in production.
+
 Then, **once**, via the hosted project's SQL editor (never in a migration —
-these are secret values), seed the Vault secrets the cron job reads:
+these are secret values), seed the Vault secrets the cron job reads. The
+`cron_secret` value here **must equal** the `CRON_SECRET` function secret set
+above, or the daily cleanup gets a 401 and silently never runs:
 
 ```sql
 select vault.create_secret('https://<ref>.supabase.co', 'project_url');
@@ -158,10 +165,39 @@ select vault.create_secret('<hosted anon key>', 'anon_key');
 select vault.create_secret('<same CRON_SECRET as above>', 'cron_secret');
 ```
 
-In the dashboard: **Authentication → URL Configuration** set the production
-Site URL + `/auth/callback` redirect; **Authentication → Providers → Google**
-add the production client id/secret (and the production callback URL in Google
-Cloud Console).
+Verify the whole cron path end-to-end from the SQL editor (fires the same call
+`pg_cron` makes; expect `200 {"success":true,...}` in `net._http_response`):
+
+```sql
+select net.http_post(
+  url     := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/cron-cleanup',
+  headers := jsonb_build_object('Content-Type','application/json',
+               'apikey', (select decrypted_secret from vault.decrypted_secrets where name = 'anon_key'),
+               'x-cron-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret')),
+  body    := '{}'::jsonb);
+-- a few seconds later:
+select status_code, content from net._http_response order by id desc limit 1;
+```
+
+In the dashboard: **Authentication → URL Configuration** — set the production
+**Site URL** to the frontend origin and add `<frontend>/auth/callback` to
+**Redirect URLs**. This matters even for email/password: confirmation-email
+links are built from Site URL, so if it's left at `http://localhost:3000` users
+can't confirm their account in production.
+
+### Google OAuth (hosted)
+
+1. **Google Cloud Console** → create a project → configure the OAuth consent
+   screen (External; add yourself under **Test users** while it stays in
+   Testing, or publish the app).
+2. **Credentials → Create OAuth client ID → Web application**:
+   - Authorized JavaScript origins: the frontend origin (e.g. `https://<app>.vercel.app`)
+   - Authorized redirect URIs: `https://<ref>.supabase.co/auth/v1/callback`
+3. **Supabase dashboard → Authentication → Providers → Google** → enable, paste
+   the Client ID + Secret.
+
+There is no way around Google Cloud Console — it is the only place Google issues
+the OAuth Client ID/Secret (same as with NextAuth's Google provider).
 
 ### Frontend (Vercel)
 
@@ -170,6 +206,15 @@ Cloud Console).
   project's values.
 - After the first deploy, add the resulting domain to Supabase Auth redirect
   URLs and Google Cloud authorized origins.
+
+### CORS note
+
+Edge Functions must return their own CORS headers — the hosted gateway does
+**not** add them. In particular `Access-Control-Allow-Methods` must list
+`PATCH`/`DELETE` (they aren't CORS-safelisted), or the browser preflight blocks
+product edit/activate/delete in production. The local stack's Kong gateway
+answers `OPTIONS` permissively on its own, so a missing header only surfaces
+once deployed — see `functions/_shared/cors.ts`.
 
 ---
 
