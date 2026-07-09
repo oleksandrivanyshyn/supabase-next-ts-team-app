@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -74,6 +75,16 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
 
   const isPending = createProduct.isPending || updateProduct.isPending;
 
+  const imagePreview = product?.imageUrl ? (
+    <Image
+      src={product.imageUrl}
+      alt={product.title}
+      width={96}
+      height={96}
+      className="h-24 w-24 rounded-md border object-cover"
+    />
+  ) : null;
+
   const onSubmit = handleSubmit(async (values) => {
     const uploadedPath =
       upload.successes.length > 0 ? `${uploadPath}/${upload.successes[0]}` : undefined;
@@ -124,14 +135,7 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
           {!readOnly && (
             <Field>
               <FieldLabel>Image</FieldLabel>
-              {product?.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={product.imageUrl}
-                  alt={product.title}
-                  className="h-24 w-24 rounded-md border object-cover"
-                />
-              )}
+              {imagePreview}
               <Dropzone {...upload}>
                 <DropzoneEmptyState />
                 <DropzoneContent />
@@ -139,15 +143,10 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
             </Field>
           )}
 
-          {readOnly && product?.imageUrl && (
+          {readOnly && imagePreview && (
             <Field>
               <FieldLabel>Image</FieldLabel>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={product.imageUrl}
-                alt={product.title}
-                className="h-24 w-24 rounded-md border object-cover"
-              />
+              {imagePreview}
             </Field>
           )}
 

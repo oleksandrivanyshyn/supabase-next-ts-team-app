@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { format } from "date-fns";
 import { MoreHorizontal } from "lucide-react";
 
@@ -79,10 +80,11 @@ export function ProductTable({ products, isLoading, onEdit, onDelete }: ProductT
             <TableRow key={product.id}>
               <TableCell>
                 {product.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product.title}
+                    width={40}
+                    height={40}
                     className="size-10 rounded-sm object-cover border"
                   />
                 ) : (
