@@ -2,6 +2,7 @@ import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 import { createContext, requireTeam } from "../_shared/context.ts";
 import { HttpError, toErrorResponse } from "../_shared/errors.ts";
+import { jsonResponse, parseBody, validate } from "../_shared/http.ts";
 import type { Database } from "../_shared/database.types.ts";
 import { createProductSchema, productListQuerySchema, updateProductSchema } from "./schemas.ts";
 
@@ -90,11 +91,7 @@ Deno.serve(async (req: Request) => {
                 const value = url.searchParams.get(key);
                 if (value) queryParams[key] = value;
             }
-            const parsedQuery = productListQuerySchema.safeParse(queryParams);
-            if (!parsedQuery.success) {
-                throw new HttpError(400, "Validation failed: " + parsedQuery.error.message);
-            }
-            const { status, dateFrom, dateTo, createdBy, search } = parsedQuery.data;
+            const { status, dateFrom, dateTo, createdBy, search } = validate(queryParams, productListQuerySchema);
 
             let query = ctx.supabase
                 .from("products")
@@ -149,10 +146,7 @@ Deno.serve(async (req: Request) => {
                 mapProductRow(p, p.image_path ? (signedUrlsMap[p.image_path] || null) : null)
             ) || [];
 
-            return new Response(JSON.stringify({ data: responseData, count, page, pageSize }), {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+            return jsonResponse({ data: responseData, count, page, pageSize });
         }
 
         if (req.method === "GET" && segments.length === 2) {
@@ -167,27 +161,19 @@ Deno.serve(async (req: Request) => {
 
             if (error || !product) throw new HttpError(404, "Product not found");
 
-            return new Response(JSON.stringify({ product: await toProductDto(ctx.supabase, product) }), {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+            return jsonResponse({ product: await toProductDto(ctx.supabase, product) });
         }
 
         if (req.method === "POST" && segments.length === 1) {
-            const body = await req.json().catch(() => ({}));
-            const result = createProductSchema.safeParse(body);
-
-            if (!result.success) {
-                throw new HttpError(400, "Validation failed: " + result.error.message);
-            }
+            const result = await parseBody(req, createProductSchema);
 
             const { data: product, error } = await ctx.supabase
                 .from("products")
                 .insert({
                     team_id: teamId,
-                    title: result.data.title,
-                    description: result.data.description || "",
-                    image_path: result.data.imagePath || null,
+                    title: result.title,
+                    description: result.description || "",
+                    image_path: result.imagePath || null,
                     created_by: ctx.user.id,
                     status: "draft"
                 })
@@ -196,20 +182,12 @@ Deno.serve(async (req: Request) => {
 
             if (error) throw new HttpError(400, error.message);
 
-            return new Response(JSON.stringify({ product: await toProductDto(ctx.supabase, product) }), {
-                status: 201,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+            return jsonResponse({ product: await toProductDto(ctx.supabase, product) }, 201);
         }
 
         if (req.method === "PATCH" && segments.length === 2) {
             const productId = segments[1];
-            const body = await req.json().catch(() => ({}));
-            const result = updateProductSchema.safeParse(body);
-
-            if (!result.success) {
-                throw new HttpError(400, "Validation failed: " + result.error.message);
-            }
+            const result = await parseBody(req, updateProductSchema);
 
             const { data: currentProduct, error: fetchError } = await ctx.supabase
                 .from("products")
@@ -220,15 +198,15 @@ Deno.serve(async (req: Request) => {
 
             if (fetchError || !currentProduct) throw new HttpError(404, "Product not found");
 
-            if (currentProduct.status !== "draft" && (result.data.title !== undefined || result.data.description !== undefined || result.data.imagePath !== undefined)) {
+            if (currentProduct.status !== "draft" && (result.title !== undefined || result.description !== undefined || result.imagePath !== undefined)) {
                 throw new HttpError(409, "Active or deleted products cannot be edited, only their status can change");
             }
 
             const updateData: ProductUpdate = {};
-            if (result.data.title !== undefined) updateData.title = result.data.title;
-            if (result.data.description !== undefined) updateData.description = result.data.description;
-            if (result.data.imagePath !== undefined) updateData.image_path = result.data.imagePath || null;
-            if (result.data.status !== undefined) updateData.status = result.data.status;
+            if (result.title !== undefined) updateData.title = result.title;
+            if (result.description !== undefined) updateData.description = result.description;
+            if (result.imagePath !== undefined) updateData.image_path = result.imagePath || null;
+            if (result.status !== undefined) updateData.status = result.status;
 
             const { data: updatedProduct, error: updateError } = await ctx.supabase
                 .from("products")
@@ -243,10 +221,7 @@ Deno.serve(async (req: Request) => {
                 throw new HttpError(status, updateError.message);
             }
 
-            return new Response(JSON.stringify({ product: await toProductDto(ctx.supabase, updatedProduct) }), {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+            return jsonResponse({ product: await toProductDto(ctx.supabase, updatedProduct) });
         }
 
         if (req.method === "DELETE" && segments.length === 2) {
@@ -273,10 +248,7 @@ Deno.serve(async (req: Request) => {
 
             if (error) throw new HttpError(400, error.message);
 
-            return new Response(JSON.stringify({ success: true, product: await toProductDto(ctx.supabase, updatedProduct) }), {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+            return jsonResponse({ success: true, product: await toProductDto(ctx.supabase, updatedProduct) });
         }
 
         throw new HttpError(404, "Not Found");

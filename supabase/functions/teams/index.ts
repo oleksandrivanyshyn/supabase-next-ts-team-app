@@ -1,6 +1,7 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { createContext } from "../_shared/context.ts";
 import { HttpError, toErrorResponse } from "../_shared/errors.ts";
+import { jsonResponse, parseBody } from "../_shared/http.ts";
 import type { Database } from "../_shared/database.types.ts";
 import { createTeamSchema, joinTeamSchema } from "./schemas.ts";
 
@@ -41,10 +42,7 @@ Deno.serve(async (req: Request) => {
                 throw new HttpError(status, rpcError.message);
             }
 
-            return new Response(JSON.stringify({ success: true }), {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+            return jsonResponse({ success: true });
         }
 
         if (req.method === "POST" && path.endsWith("/delete")) {
@@ -58,10 +56,7 @@ Deno.serve(async (req: Request) => {
                 throw new HttpError(status, rpcError.message);
             }
 
-            return new Response(JSON.stringify({ success: true }), {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+            return jsonResponse({ success: true });
         }
 
         if (ctx.teamId) {
@@ -69,15 +64,10 @@ Deno.serve(async (req: Request) => {
         }
 
         if (req.method === "POST" && (path === "/teams" || path === "/")) {
-            const body = await req.json().catch(() => ({}));
-
-            const result = createTeamSchema.safeParse(body);
-            if (!result.success) {
-                throw new HttpError(400, "Validation failed: " + result.error.message);
-            }
+            const result = await parseBody(req, createTeamSchema);
 
             const { data: team, error: rpcError } = await ctx.supabase.rpc("create_team", {
-                p_name: result.data.name,
+                p_name: result.name,
             }).single();
 
             if (rpcError) {
@@ -85,22 +75,14 @@ Deno.serve(async (req: Request) => {
                 throw new HttpError(status, rpcError.message);
             }
 
-            return new Response(JSON.stringify({ team: toTeamDto(team) }), {
-                status: 201,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+            return jsonResponse({ team: toTeamDto(team) }, 201);
         }
 
         if (req.method === "POST" && path.endsWith("/join")) {
-            const body = await req.json().catch(() => ({}));
-
-            const result = joinTeamSchema.safeParse(body);
-            if (!result.success) {
-                throw new HttpError(400, "Validation failed: " + result.error.message);
-            }
+            const result = await parseBody(req, joinTeamSchema);
 
             const { data: team, error: rpcError } = await ctx.supabase.rpc("join_team", {
-                p_invite_code: result.data.inviteCode,
+                p_invite_code: result.inviteCode,
             }).single();
 
             if (rpcError) {
@@ -108,10 +90,7 @@ Deno.serve(async (req: Request) => {
                 throw new HttpError(status, rpcError.message);
             }
 
-            return new Response(JSON.stringify({ team: toTeamDto(team) }), {
-                status: 200,
-                headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
+            return jsonResponse({ team: toTeamDto(team) });
         }
 
         throw new HttpError(404, "Not Found");

@@ -1,6 +1,7 @@
 import { corsHeaders } from "../_shared/cors.ts";
 import { createSupabaseAdminClient } from "../_shared/supabase-admin.ts";
 import { HttpError, toErrorResponse } from "../_shared/errors.ts";
+import { jsonResponse } from "../_shared/http.ts";
 
 Deno.serve(async (req: Request) => {
     if (req.method === "OPTIONS") {
@@ -41,10 +42,7 @@ Deno.serve(async (req: Request) => {
 
         const deletedCount = data?.length || 0;
 
-        return new Response(JSON.stringify({ success: true, deletedCount }), {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ success: true, deletedCount });
 
     } catch (error) {
         return toErrorResponse(error);
