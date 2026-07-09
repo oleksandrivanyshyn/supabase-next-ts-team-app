@@ -25,3 +25,9 @@ export function useLeaveTeam() {
     mutationFn: () => callFunction<{ success: boolean }>("teams/leave", { method: "POST" }),
   });
 }
+
+export function useDeleteTeam() {
+  return useMutation({
+    mutationFn: () => callFunction<{ success: boolean }>("teams/delete", { method: "POST" }),
+  });
+}

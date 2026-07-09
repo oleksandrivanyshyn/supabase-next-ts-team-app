@@ -3,6 +3,7 @@ export type Team = {
   name: string;
   inviteCode: string;
   createdAt: string;
+  createdBy: string;
 };
 
 export type ProductStatus = "draft" | "active" | "deleted";

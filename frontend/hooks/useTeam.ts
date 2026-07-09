@@ -12,7 +12,7 @@ export function useTeam() {
       // where RLS legitimately matches 0 rows — single() would throw a 406.
       const { data, error } = await supabase
         .from("teams")
-        .select("id, name, inviteCode:invite_code, createdAt:created_at")
+        .select("id, name, inviteCode:invite_code, createdAt:created_at, createdBy:created_by")
         .maybeSingle();
       if (error) throw error;
       return data as unknown as Team | null;

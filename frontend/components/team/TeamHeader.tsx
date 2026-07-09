@@ -4,10 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useQueryClient } from "@tanstack/react-query";
-import { Copy, DoorOpen, LogOut, Monitor, Moon, Sun } from "lucide-react";
+import { Copy, DoorOpen, LogOut, Monitor, Moon, Sun, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AvatarStack } from "@/components/team/AvatarStack";
 import { useTeam } from "@/hooks/useTeam";
-import { useLeaveTeam } from "@/hooks/useTeams";
+import { useDeleteTeam, useLeaveTeam } from "@/hooks/useTeams";
 import { useTeamPresence } from "@/hooks/useTeamPresence";
 import { createClient } from "@/lib/supabase/client";
 
@@ -42,7 +43,11 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
   const { data: team } = useTeam();
   const { members } = useTeamPresence(teamId, me);
   const leaveTeam = useLeaveTeam();
+  const deleteTeam = useDeleteTeam();
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const isCreator = !!team && team.createdBy === me.id;
 
   const copyInviteCode = async () => {
     if (!team) return;
@@ -63,6 +68,18 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
       await leaveTeam.mutateAsync();
       queryClient.clear();
       toast.success("You left the team");
+      router.push("/onboarding");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteTeam.mutateAsync();
+      queryClient.clear();
+      toast.success("Team deleted");
       router.push("/onboarding");
       router.refresh();
     } catch (error) {
@@ -110,14 +127,21 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setLeaveOpen(true)}
-          aria-label="Leave team"
-        >
-          <DoorOpen className="size-4" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Team options" />}>
+            <DoorOpen className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setLeaveOpen(true)}>
+              <DoorOpen className="size-4" /> Leave team
+            </DropdownMenuItem>
+            {isCreator && (
+              <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
+                <Trash2 className="size-4" /> Delete team
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out">
           <LogOut className="size-4" />
@@ -137,6 +161,40 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleLeave} disabled={leaveTeam.isPending}>
               {leaveTeam.isPending ? "Leaving..." : "Leave team"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          setDeleteOpen(open);
+          if (!open) setDeleteConfirmText("");
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {team?.name ?? "this team"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes the team and every product in it, for every member.
+              This cannot be undone. Type <span className="font-semibold">{team?.name}</span>{" "}
+              to confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder={team?.name}
+            aria-label="Type the team name to confirm deletion"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteTeam.isPending || deleteConfirmText !== team?.name}
+            >
+              {deleteTeam.isPending ? "Deleting..." : "Delete team"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
