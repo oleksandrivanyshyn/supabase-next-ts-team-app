@@ -19,3 +19,9 @@ export function useJoinTeam() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["team"] }),
   });
 }
+
+export function useLeaveTeam() {
+  return useMutation({
+    mutationFn: () => callFunction<{ success: boolean }>("teams/leave", { method: "POST" }),
+  });
+}

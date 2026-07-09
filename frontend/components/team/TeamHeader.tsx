@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useQueryClient } from "@tanstack/react-query";
-import { Copy, LogOut, Monitor, Moon, Sun } from "lucide-react";
+import { Copy, DoorOpen, LogOut, Monitor, Moon, Sun } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -13,8 +14,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { AvatarStack } from "@/components/team/AvatarStack";
 import { useTeam } from "@/hooks/useTeam";
+import { useLeaveTeam } from "@/hooks/useTeams";
 import { useTeamPresence } from "@/hooks/useTeamPresence";
 import { createClient } from "@/lib/supabase/client";
 
@@ -29,6 +41,8 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
   const { theme, setTheme } = useTheme();
   const { data: team } = useTeam();
   const { members } = useTeamPresence(teamId, me);
+  const leaveTeam = useLeaveTeam();
+  const [leaveOpen, setLeaveOpen] = useState(false);
 
   const copyInviteCode = async () => {
     if (!team) return;
@@ -42,6 +56,18 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
     queryClient.clear();
     router.push("/login");
     router.refresh();
+  };
+
+  const handleLeave = async () => {
+    try {
+      await leaveTeam.mutateAsync();
+      queryClient.clear();
+      toast.success("You left the team");
+      router.push("/onboarding");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
+    }
   };
 
   return (
@@ -84,10 +110,37 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setLeaveOpen(true)}
+          aria-label="Leave team"
+        >
+          <DoorOpen className="size-4" />
+        </Button>
+
         <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out">
           <LogOut className="size-4" />
         </Button>
       </div>
+
+      <AlertDialog open={leaveOpen} onOpenChange={setLeaveOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave {team?.name ?? "this team"}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You&apos;ll lose access to this team&apos;s products until you rejoin with an
+              invite code. Products you created stay with the team.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLeave} disabled={leaveTeam.isPending}>
+              {leaveTeam.isPending ? "Leaving..." : "Leave team"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   );
 }
