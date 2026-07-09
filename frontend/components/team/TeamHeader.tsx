@@ -63,11 +63,11 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
     router.refresh();
   };
 
-  const handleLeave = async () => {
+  const leaveOrDelete = async (mutateAsync: () => Promise<unknown>, successMessage: string) => {
     try {
-      await leaveTeam.mutateAsync();
+      await mutateAsync();
       queryClient.clear();
-      toast.success("You left the team");
+      toast.success(successMessage);
       router.push("/onboarding");
       router.refresh();
     } catch (error) {
@@ -75,17 +75,8 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
     }
   };
 
-  const handleDelete = async () => {
-    try {
-      await deleteTeam.mutateAsync();
-      queryClient.clear();
-      toast.success("Team deleted");
-      router.push("/onboarding");
-      router.refresh();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
-    }
-  };
+  const handleLeave = () => leaveOrDelete(() => leaveTeam.mutateAsync(), "You left the team");
+  const handleDelete = () => leaveOrDelete(() => deleteTeam.mutateAsync(), "Team deleted");
 
   return (
     <header className="flex items-center justify-between gap-4 border-b px-6 py-3">
