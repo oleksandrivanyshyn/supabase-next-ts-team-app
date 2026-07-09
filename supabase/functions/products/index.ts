@@ -22,12 +22,6 @@ type ProductDto = {
     updatedAt: string;
 };
 
-// Locally, the auto-injected SUPABASE_URL resolves to the internal Docker
-// network hostname (e.g. http://kong:8000), which a real browser can't reach —
-// only Edge Functions calling Storage/PostgREST server-side can. Signed URLs
-// built from that client inherit the same unreachable origin. PUBLIC_SUPABASE_URL
-// (set locally to http://127.0.0.1:54321, unset in production where SUPABASE_URL
-// is already public) rewrites the origin before a signed URL reaches the client.
 function toPublicUrl(url: string): string {
     const publicOrigin = Deno.env.get("PUBLIC_SUPABASE_URL");
     if (!publicOrigin) return url;
@@ -41,12 +35,6 @@ function mapProductRow(product: ProductRow, imageUrl: string | null): ProductDto
         description: product.description,
         imageUrl,
         status: product.status,
-        // profiles is nullable in the generated embed type (Supabase can't
-        // statically prove the join always resolves), but created_by is a
-        // not-null FK into profiles and every user gets a profile row via
-        // the handle_new_user trigger on signup — this can't actually be
-        // null in practice, so asserting it here is more honest than
-        // quietly coalescing to null and pretending that's a normal state.
         createdBy: { id: product.created_by, displayName: product.profiles!.display_name },
         createdAt: product.created_at,
         updatedAt: product.updated_at,
@@ -102,10 +90,6 @@ Deno.serve(async (req: Request) => {
             if (createdBy) query = query.eq("created_by", createdBy);
             if (dateFrom) query = query.gte("created_at", dateFrom);
             if (dateTo) {
-                // The UI sends dateTo as a calendar day (yyyy-MM-dd). Left as-is
-                // it compares against 00:00, silently excluding rows created
-                // later that same day — extend to end-of-day so the range is
-                // inclusive of the whole picked day.
                 const upperBound = /^\d{4}-\d{2}-\d{2}$/.test(dateTo) ? `${dateTo}T23:59:59.999Z` : dateTo;
                 query = query.lte("created_at", upperBound);
             }

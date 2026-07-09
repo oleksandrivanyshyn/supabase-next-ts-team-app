@@ -7,9 +7,6 @@ export function useTeam() {
     queryKey: ["team"],
     queryFn: async (): Promise<Team | null> => {
       const supabase = createClient();
-      // maybeSingle, not single: right after leaving a team there's a brief
-      // window (still-mounted TeamHeader refetching post queryClient.clear())
-      // where RLS legitimately matches 0 rows — single() would throw a 406.
       const { data, error } = await supabase
         .from("teams")
         .select("id, name, inviteCode:invite_code, createdAt:created_at, createdBy:created_by")

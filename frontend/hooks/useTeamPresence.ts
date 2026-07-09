@@ -10,8 +10,6 @@ type Me = {
 
 export function useTeamPresence(teamId?: string, me?: Me) {
   const [members, setMembers] = useState<Record<string, PresenceMember>>({});
-  // Depend on the primitive fields below, not `me` itself, so a new object
-  // reference each render doesn't tear down and rejoin the channel.
   const meId = me?.id;
   const meDisplayName = me?.displayName;
   const meAvatarUrl = me?.avatarUrl ?? null;

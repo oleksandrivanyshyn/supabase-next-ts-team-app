@@ -29,8 +29,6 @@ export function ForgotPasswordForm({ className, ...props }: React.ComponentProps
     setError(null);
 
     try {
-      // Routes through /auth/callback's code exchange, which then forwards to
-      // /reset-password once a recovery session is established.
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
       });

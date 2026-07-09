@@ -23,7 +23,6 @@ export async function callFunction<T>(
         const body = await error.context.json();
         if (body?.error) message = body.error;
       } catch {
-        // non-JSON body, keep default message
       }
     }
     throw new Error(message);

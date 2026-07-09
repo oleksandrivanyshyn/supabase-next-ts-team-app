@@ -57,13 +57,6 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
     }
   }, [open, product, reset]);
 
-  // Fresh slot id per create session; real product id once a draft exists.
-  // `open` isn't read by the computation itself but must still trigger a
-  // recompute (a fresh UUID) each time the sheet re-opens for a new create
-  // session — a useMemo dependency array can't express "used as a trigger,
-  // not a read", so this uses React's documented "adjust state during
-  // render" pattern instead (see react.dev "resetting state when a prop
-  // changes"), keyed on all three original trigger values.
   const productId = product?.id;
   const computeUploadPath = () =>
     productId ? `${teamId}/${productId}` : `${teamId}/${crypto.randomUUID()}`;

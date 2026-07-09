@@ -10,9 +10,6 @@ const PUBLIC_ROUTES = [
   "/auth/callback",
 ];
 
-// Excludes /reset-password on purpose: reaching it requires the session
-// established by the recovery link's /auth/callback exchange, so bouncing
-// it here would make the page unreachable.
 const BOUNCE_IF_AUTHED_ROUTES = ["/login", "/signup", "/forgot-password"];
 
 export async function updateSession(request: NextRequest) {

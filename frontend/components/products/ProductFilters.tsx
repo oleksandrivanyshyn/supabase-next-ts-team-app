@@ -39,10 +39,6 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
   const debouncedSearch = useDebouncedValue(searchInput, 300);
   const [creatorOpen, setCreatorOpen] = useState(false);
 
-  // Read the latest filters/onFiltersChange via ref instead of depending on
-  // them directly — this effect should fire only when the debounced search
-  // value actually settles, not on every unrelated filter change (which
-  // would otherwise re-run this and re-invoke onFiltersChange redundantly).
   const latest = useRef({ filters, onFiltersChange });
   useEffect(() => {
     latest.current = { filters, onFiltersChange };

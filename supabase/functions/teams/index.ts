@@ -28,9 +28,6 @@ Deno.serve(async (req: Request) => {
         const url = new URL(req.url);
         const path = url.pathname.replace(/\/+$/, "");
 
-        // Leave and delete require the opposite guard from create/join (must
-        // HAVE a team), so both are handled before the "already belongs to a
-        // team" check below.
         if (req.method === "POST" && path.endsWith("/leave")) {
             if (!ctx.teamId) {
                 throw new HttpError(409, "User does not belong to a team");
