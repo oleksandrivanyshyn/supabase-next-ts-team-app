@@ -10,13 +10,18 @@ type Me = {
 
 export function useTeamPresence(teamId?: string, me?: Me) {
   const [members, setMembers] = useState<Record<string, PresenceMember>>({});
+  // Depend on the primitive fields below, not `me` itself, so a new object
+  // reference each render doesn't tear down and rejoin the channel.
+  const meId = me?.id;
+  const meDisplayName = me?.displayName;
+  const meAvatarUrl = me?.avatarUrl ?? null;
 
   useEffect(() => {
-    if (!teamId || !me) return;
+    if (!teamId || !meId) return;
 
     const supabase = createClient();
     const channel = supabase.channel(`presence:${teamId}`, {
-      config: { presence: { key: me.id } },
+      config: { presence: { key: meId } },
     });
 
     channel
@@ -31,9 +36,9 @@ export function useTeamPresence(teamId?: string, me?: Me) {
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           await channel.track({
-            userId: me.id,
-            displayName: me.displayName,
-            avatarUrl: me.avatarUrl,
+            userId: meId,
+            displayName: meDisplayName,
+            avatarUrl: meAvatarUrl,
             onlineAt: new Date().toISOString(),
           });
         }
@@ -42,10 +47,7 @@ export function useTeamPresence(teamId?: string, me?: Me) {
     return () => {
       channel.unsubscribe();
     };
-    // Depend on the primitive fields, not the `me` object identity, so a new
-    // object reference each render doesn't tear down and rejoin the channel.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId, me?.id, me?.displayName, me?.avatarUrl]);
+  }, [teamId, meId, meDisplayName, meAvatarUrl]);
 
   return { members: Object.values(members) };
 }

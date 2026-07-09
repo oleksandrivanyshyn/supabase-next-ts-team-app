@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,11 +58,22 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
   }, [open, product, reset]);
 
   // Fresh slot id per create session; real product id once a draft exists.
-  const uploadPath = useMemo(
-    () => (product ? `${teamId}/${product.id}` : `${teamId}/${crypto.randomUUID()}`),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [open, product?.id, teamId],
-  );
+  // `open` isn't read by the computation itself but must still trigger a
+  // recompute (a fresh UUID) each time the sheet re-opens for a new create
+  // session — a useMemo dependency array can't express "used as a trigger,
+  // not a read", so this uses React's documented "adjust state during
+  // render" pattern instead (see react.dev "resetting state when a prop
+  // changes"), keyed on all three original trigger values.
+  const productId = product?.id;
+  const computeUploadPath = () =>
+    productId ? `${teamId}/${productId}` : `${teamId}/${crypto.randomUUID()}`;
+  const [uploadPath, setUploadPath] = useState(computeUploadPath);
+  const uploadPathKey = `${open}:${productId}:${teamId}`;
+  const [prevUploadPathKey, setPrevUploadPathKey] = useState(uploadPathKey);
+  if (uploadPathKey !== prevUploadPathKey) {
+    setPrevUploadPathKey(uploadPathKey);
+    setUploadPath(computeUploadPath());
+  }
 
   const upload = useSupabaseUpload({
     bucketName: "product-images",

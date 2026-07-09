@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Calendar as CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 
@@ -39,11 +39,20 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
   const debouncedSearch = useDebouncedValue(searchInput, 300);
   const [creatorOpen, setCreatorOpen] = useState(false);
 
+  // Read the latest filters/onFiltersChange via ref instead of depending on
+  // them directly — this effect should fire only when the debounced search
+  // value actually settles, not on every unrelated filter change (which
+  // would otherwise re-run this and re-invoke onFiltersChange redundantly).
+  const latest = useRef({ filters, onFiltersChange });
   useEffect(() => {
-    if (debouncedSearch !== (filters.search ?? "")) {
-      onFiltersChange({ ...filters, search: debouncedSearch || undefined });
+    latest.current = { filters, onFiltersChange };
+  });
+
+  useEffect(() => {
+    const { filters: currentFilters, onFiltersChange: currentOnFiltersChange } = latest.current;
+    if (debouncedSearch !== (currentFilters.search ?? "")) {
+      currentOnFiltersChange({ ...currentFilters, search: debouncedSearch || undefined });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch]);
 
   const dateRange = {
