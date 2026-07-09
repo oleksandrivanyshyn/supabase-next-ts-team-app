@@ -13,9 +13,9 @@ export function useTeam() {
       const { data, error } = await supabase
         .from("teams")
         .select("id, name, inviteCode:invite_code, createdAt:created_at, createdBy:created_by")
-        .maybeSingle();
+        .maybeSingle<Team>();
       if (error) throw error;
-      return data as unknown as Team | null;
+      return data;
     },
   });
 }
@@ -27,9 +27,10 @@ export function useTeamMembers() {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, displayName:display_name");
+        .select("id, displayName:display_name")
+        .overrideTypes<TeamMember[]>();
       if (error) throw error;
-      return data as unknown as TeamMember[];
+      return data;
     },
   });
 }
