@@ -63,15 +63,6 @@ export function ProductFormSheet({
     defaultValues: { title: '', description: '' },
   });
 
-  useEffect(() => {
-    if (open) {
-      reset({
-        title: product?.title ?? '',
-        description: product?.description ?? '',
-      });
-    }
-  }, [open, product, reset]);
-
   const productId = product?.id;
   const computeUploadPath = () =>
     productId ? `${teamId}/${productId}` : `${teamId}/${crypto.randomUUID()}`;
@@ -91,6 +82,17 @@ export function ProductFormSheet({
     maxFiles: 1,
     upsert: true,
   });
+
+  const resetUpload = upload.reset;
+  useEffect(() => {
+    if (open) {
+      reset({
+        title: product?.title ?? '',
+        description: product?.description ?? '',
+      });
+      resetUpload();
+    }
+  }, [open, product, reset, resetUpload]);
 
   const isPending = createProduct.isPending || updateProduct.isPending;
 

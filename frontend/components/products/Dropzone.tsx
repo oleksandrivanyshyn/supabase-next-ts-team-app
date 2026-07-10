@@ -225,7 +225,18 @@ function DropzoneEmptyState({ className }: { className?: string }) {
   }
 
   return (
-    <div className={cn('flex flex-col items-center gap-y-2', className)}>
+    <div
+      onClick={() => inputRef.current?.click()}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click();
+      }}
+      className={cn(
+        'flex flex-col items-center gap-y-2 cursor-pointer',
+        className,
+      )}
+    >
       <Upload size={20} className="text-muted-foreground" />
       <p className="text-sm">
         Upload{!!maxFiles && maxFiles > 1 ? ` ${maxFiles}` : ''} file
@@ -234,12 +245,9 @@ function DropzoneEmptyState({ className }: { className?: string }) {
       <div className="flex flex-col items-center gap-y-1">
         <p className="text-xs text-muted-foreground">
           Drag and drop or{' '}
-          <a
-            onClick={() => inputRef.current?.click()}
-            className="underline cursor-pointer transition hover:text-foreground"
-          >
+          <span className="underline">
             select {maxFiles === 1 ? `file` : 'files'}
-          </a>{' '}
+          </span>{' '}
           to upload
         </p>
         {maxFileSize !== Number.POSITIVE_INFINITY && (

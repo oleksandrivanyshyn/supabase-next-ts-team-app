@@ -158,6 +158,12 @@ function useSupabaseUpload(options: UseSupabaseUploadOptions) {
     }
   }
 
+  const reset = useCallback(() => {
+    setFiles([]);
+    setSuccesses([]);
+    setErrors([]);
+  }, []);
+
   return {
     files,
     setFiles,
@@ -166,6 +172,7 @@ function useSupabaseUpload(options: UseSupabaseUploadOptions) {
     loading,
     errors,
     setErrors,
+    reset,
     onUpload,
     maxFileSize: maxFileSize,
     maxFiles: maxFiles,
