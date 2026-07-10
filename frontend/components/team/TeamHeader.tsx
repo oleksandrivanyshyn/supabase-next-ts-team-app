@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useQueryClient } from '@tanstack/react-query';
@@ -44,6 +44,16 @@ type TeamHeaderProps = {
   me: { id: string; displayName: string; avatarUrl: string | null };
 };
 
+const noopSubscribe = () => () => {};
+
+function useMounted() {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false,
+  );
+}
+
 export function TeamHeader({ teamId, me }: TeamHeaderProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -55,6 +65,7 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const mounted = useMounted();
   const isCreator = !!team && team.createdBy === me.id;
 
   const copyInviteCode = async () => {
@@ -120,7 +131,9 @@ export function TeamHeader({ teamId, me }: TeamHeaderProps) {
 
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
-            {theme === 'dark' ? (
+            {!mounted ? (
+              <Monitor className="size-4" />
+            ) : theme === 'dark' ? (
               <Moon className="size-4" />
             ) : theme === 'light' ? (
               <Sun className="size-4" />
