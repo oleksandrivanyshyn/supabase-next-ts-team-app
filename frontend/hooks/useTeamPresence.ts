@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import type { PresenceMember } from "@/types/types";
+import { useEffect, useState } from 'react';
+
+import { createClient } from '@/lib/supabase/client';
+import type { PresenceMember } from '@/types/types';
 
 type Me = {
   id: string;
@@ -23,7 +24,7 @@ export function useTeamPresence(teamId?: string, me?: Me) {
     });
 
     channel
-      .on("presence", { event: "sync" }, () => {
+      .on('presence', { event: 'sync' }, () => {
         const state = channel.presenceState<PresenceMember>();
         const next: Record<string, PresenceMember> = {};
         for (const [key, metas] of Object.entries(state)) {
@@ -32,7 +33,7 @@ export function useTeamPresence(teamId?: string, me?: Me) {
         setMembers(next);
       })
       .subscribe(async (status) => {
-        if (status === "SUBSCRIBED") {
+        if (status === 'SUBSCRIBED') {
           await channel.track({
             userId: meId,
             displayName: meDisplayName,

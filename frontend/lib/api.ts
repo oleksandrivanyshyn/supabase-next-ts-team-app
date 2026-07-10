@@ -1,8 +1,9 @@
-import { createClient } from "@/lib/supabase/client";
-import { FunctionsHttpError } from "@supabase/supabase-js";
+import { FunctionsHttpError } from '@supabase/supabase-js';
+
+import { createClient } from '@/lib/supabase/client';
 
 type CallOptions = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: Record<string, unknown>;
 };
 
@@ -12,18 +13,17 @@ export async function callFunction<T>(
 ): Promise<T> {
   const supabase = createClient();
   const { data, error } = await supabase.functions.invoke(path, {
-    method: options.method ?? "POST",
+    method: options.method ?? 'POST',
     body: options.body,
   });
 
   if (error) {
-    let message = "Something went wrong. Please try again.";
+    let message = 'Something went wrong. Please try again.';
     if (error instanceof FunctionsHttpError) {
       try {
         const body = await error.context.json();
         if (body?.error) message = body.error;
-      } catch {
-      }
+      } catch {}
     }
     throw new Error(message);
   }

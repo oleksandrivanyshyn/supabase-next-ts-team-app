@@ -1,6 +1,6 @@
-import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
-import { HttpError } from "./errors.ts";
-import type { Database } from "./database.types.ts";
+import type { SupabaseClient } from 'npm:@supabase/supabase-js@2';
+import { HttpError } from './errors.ts';
+import type { Database } from './database.types.ts';
 
 export async function getAuthedUser(supabase: SupabaseClient<Database>) {
   const {
@@ -9,7 +9,7 @@ export async function getAuthedUser(supabase: SupabaseClient<Database>) {
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    throw new HttpError(401, "Unauthorized");
+    throw new HttpError(401, 'Unauthorized');
   }
 
   return user;

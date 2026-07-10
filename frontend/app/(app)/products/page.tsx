@@ -1,15 +1,23 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
-import { Button } from "@/components/ui/button";
-import { ProductFilters } from "@/components/products/ProductFilters";
-import { ProductTable } from "@/components/products/ProductTable";
-import { ProductFormSheet } from "@/components/products/ProductFormSheet";
-import { DeleteProductDialog } from "@/components/products/DeleteProductDialog";
-import { useProducts } from "@/hooks/useProducts";
-import { useTeam } from "@/hooks/useTeam";
-import type { ProductFilters as ProductFiltersType, ProductListItem } from "@/types/types";
+import { useState } from 'react';
+
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+} from '@/components/ui/pagination';
+import { Button } from '@/components/ui/button';
+import { ProductFilters } from '@/components/products/ProductFilters';
+import { ProductTable } from '@/components/products/ProductTable';
+import { ProductFormSheet } from '@/components/products/ProductFormSheet';
+import { DeleteProductDialog } from '@/components/products/DeleteProductDialog';
+import { useProducts } from '@/hooks/useProducts';
+import { useTeam } from '@/hooks/useTeam';
+import type {
+  ProductFilters as ProductFiltersType,
+  ProductListItem,
+} from '@/types/types';
 
 const PAGE_SIZE = 20;
 
@@ -18,8 +26,12 @@ export default function ProductsPage() {
   const [filters, setFilters] = useState<ProductFiltersType>({});
   const [page, setPage] = useState(1);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<ProductListItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ProductListItem | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductListItem | null>(
+    null,
+  );
+  const [deleteTarget, setDeleteTarget] = useState<ProductListItem | null>(
+    null,
+  );
 
   const { data, isLoading } = useProducts(filters, page, PAGE_SIZE);
   const totalPages = data ? Math.max(1, Math.ceil(data.count / PAGE_SIZE)) : 1;
@@ -94,7 +106,10 @@ export default function ProductsPage() {
         />
       )}
 
-      <DeleteProductDialog product={deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)} />
+      <DeleteProductDialog
+        product={deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      />
     </div>
   );
 }

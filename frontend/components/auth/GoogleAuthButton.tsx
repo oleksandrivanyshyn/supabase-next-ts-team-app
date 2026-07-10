@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { createClient } from '@/lib/supabase/client';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 export function GoogleAuthButton() {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +16,7 @@ export function GoogleAuthButton() {
     setError(null);
 
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
+      provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
@@ -34,8 +34,14 @@ export function GoogleAuthButton() {
         <span className="text-xs text-muted-foreground">or continue with</span>
         <Separator className="flex-1" />
       </div>
-      <Button type="button" variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
-        {isLoading ? "Redirecting..." : "Google"}
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={handleGoogleSignIn}
+        disabled={isLoading}
+      >
+        {isLoading ? 'Redirecting...' : 'Google'}
       </Button>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

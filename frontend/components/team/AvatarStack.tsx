@@ -1,35 +1,39 @@
-import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
+import { cva, type VariantProps } from 'class-variance-authority';
+import * as React from 'react';
 
-import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
-const avatarStackVariants = cva("flex -space-x-4 -space-y-4", {
+const avatarStackVariants = cva('flex -space-x-4 -space-y-4', {
   variants: {
     orientation: {
-      vertical: "flex-row",
-      horizontal: "flex-col",
+      vertical: 'flex-row',
+      horizontal: 'flex-col',
     },
   },
   defaultVariants: {
-    orientation: "vertical",
+    orientation: 'vertical',
   },
 });
 
-export interface AvatarStackProps
-  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof avatarStackVariants> {
-  avatars: { name: string; image: string }[];
-  maxAvatarsAmount?: number;
-}
+type AvatarStackProps = React.HTMLAttributes<HTMLDivElement> &
+  VariantProps<typeof avatarStackVariants> & {
+    avatars: { name: string; image: string }[];
+    maxAvatarsAmount?: number;
+  };
 
-const AvatarStack = ({
+function AvatarStack({
   className,
   orientation,
   avatars,
   maxAvatarsAmount = 3,
   ...props
-}: AvatarStackProps) => {
+}: AvatarStackProps) {
   const shownAvatars = avatars.slice(0, maxAvatarsAmount);
   const hiddenAvatars = avatars.slice(maxAvatarsAmount);
 
@@ -38,7 +42,7 @@ const AvatarStack = ({
       className={cn(
         avatarStackVariants({ orientation }),
         className,
-        orientation === "horizontal" ? "space-x-0" : "space-y-0",
+        orientation === 'horizontal' ? 'space-x-0' : 'space-y-0',
       )}
       {...props}
     >
@@ -48,9 +52,9 @@ const AvatarStack = ({
             <AvatarImage src={image} />
             <AvatarFallback>
               {name
-                ?.split(" ")
+                ?.split(' ')
                 ?.map((word) => word[0])
-                ?.join("")
+                ?.join('')
                 ?.toUpperCase()}
             </AvatarFallback>
           </TooltipTrigger>
@@ -63,7 +67,9 @@ const AvatarStack = ({
       {hiddenAvatars.length ? (
         <Tooltip key="hidden-avatars">
           <TooltipTrigger render={<Avatar />}>
-            <AvatarFallback>+{avatars.length - shownAvatars.length}</AvatarFallback>
+            <AvatarFallback>
+              +{avatars.length - shownAvatars.length}
+            </AvatarFallback>
           </TooltipTrigger>
           <TooltipContent>
             {hiddenAvatars.map(({ name }, index) => (
@@ -74,6 +80,6 @@ const AvatarStack = ({
       ) : null}
     </div>
   );
-};
+}
 
-export { AvatarStack, avatarStackVariants };
+export { AvatarStack, avatarStackVariants, type AvatarStackProps };

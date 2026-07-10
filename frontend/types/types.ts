@@ -6,7 +6,7 @@ export type Team = {
   createdBy: string;
 };
 
-export type ProductStatus = "draft" | "active" | "deleted";
+export type ProductStatus = 'draft' | 'active' | 'deleted';
 
 export type ProductListItem = {
   id: string;

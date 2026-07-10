@@ -1,16 +1,17 @@
-import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
-import type { Database } from "@/types/database.types";
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+
+import type { Database } from '@/types/database.types';
 
 const PUBLIC_ROUTES = [
-  "/login",
-  "/signup",
-  "/forgot-password",
-  "/reset-password",
-  "/auth/callback",
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/auth/callback',
 ];
 
-const BOUNCE_IF_AUTHED_ROUTES = ["/login", "/signup", "/forgot-password"];
+const BOUNCE_IF_AUTHED_ROUTES = ['/login', '/signup', '/forgot-password'];
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -46,7 +47,7 @@ export async function updateSession(request: NextRequest) {
 
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
@@ -56,7 +57,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isBounceRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = "/products";
+    url.pathname = '/products';
     return NextResponse.redirect(url);
   }
 

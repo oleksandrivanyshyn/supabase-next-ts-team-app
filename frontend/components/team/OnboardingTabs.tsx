@@ -1,24 +1,30 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner";
+import { useRouter } from 'next/navigation';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useCreateTeam, useJoinTeam } from "@/hooks/useTeams";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useCreateTeam, useJoinTeam } from '@/hooks/useTeams';
 
 const createTeamSchema = z.object({
-  name: z.string().min(1, "Required").max(80, "Must be 80 characters or fewer"),
+  name: z.string().min(1, 'Required').max(80, 'Must be 80 characters or fewer'),
 });
 
 const joinTeamSchema = z.object({
-  inviteCode: z.string().length(6, "Must be exactly 6 characters"),
+  inviteCode: z.string().length(6, 'Must be exactly 6 characters'),
 });
 
 function CreateTeamForm() {
@@ -35,11 +41,13 @@ function CreateTeamForm() {
   const onSubmit = handleSubmit(async (values) => {
     try {
       await createTeam.mutateAsync(values.name);
-      toast.success("Team created");
-      router.push("/products");
+      toast.success('Team created');
+      router.push('/products');
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(
+        error instanceof Error ? error.message : 'Something went wrong',
+      );
     }
   });
 
@@ -47,11 +55,11 @@ function CreateTeamForm() {
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <Field>
         <FieldLabel htmlFor="team-name">Team name</FieldLabel>
-        <Input id="team-name" placeholder="Acme Inc." {...register("name")} />
+        <Input id="team-name" placeholder="Acme Inc." {...register('name')} />
         <FieldError errors={[errors.name]} />
       </Field>
       <Button type="submit" className="w-full" disabled={createTeam.isPending}>
-        {createTeam.isPending ? "Creating..." : "Create team"}
+        {createTeam.isPending ? 'Creating...' : 'Create team'}
       </Button>
     </form>
   );
@@ -71,15 +79,17 @@ function JoinTeamForm() {
   const onSubmit = handleSubmit(async (values) => {
     try {
       await joinTeam.mutateAsync(values.inviteCode);
-      toast.success("Joined team");
-      router.push("/products");
+      toast.success('Joined team');
+      router.push('/products');
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(
+        error instanceof Error ? error.message : 'Something went wrong',
+      );
     }
   });
 
-  const { onChange: rhfOnChange, ...inviteCodeField } = register("inviteCode");
+  const { onChange: rhfOnChange, ...inviteCodeField } = register('inviteCode');
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
@@ -92,14 +102,14 @@ function JoinTeamForm() {
           autoCapitalize="characters"
           {...inviteCodeField}
           onChange={(e) => {
-            e.target.value = e.target.value.toUpperCase().replace(/\s/g, "");
+            e.target.value = e.target.value.toUpperCase().replace(/\s/g, '');
             rhfOnChange(e);
           }}
         />
         <FieldError errors={[errors.inviteCode]} />
       </Field>
       <Button type="submit" className="w-full" disabled={joinTeam.isPending}>
-        {joinTeam.isPending ? "Joining..." : "Join team"}
+        {joinTeam.isPending ? 'Joining...' : 'Join team'}
       </Button>
     </form>
   );
@@ -110,7 +120,9 @@ export function OnboardingTabs() {
     <Card>
       <CardHeader>
         <CardTitle>Welcome</CardTitle>
-        <CardDescription>Create a new team or join one with an invite code.</CardDescription>
+        <CardDescription>
+          Create a new team or join one with an invite code.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="create">

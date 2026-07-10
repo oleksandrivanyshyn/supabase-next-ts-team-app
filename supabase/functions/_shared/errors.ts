@@ -1,4 +1,4 @@
-import { corsHeaders } from "./cors.ts";
+import { corsHeaders } from './cors.ts';
 
 export class HttpError extends Error {
   status: number;
@@ -11,10 +11,10 @@ export class HttpError extends Error {
 
 export function toErrorResponse(e: unknown, headers: HeadersInit = {}) {
   const status = e instanceof HttpError ? e.status : 500;
-  const message = e instanceof Error ? e.message : "Internal error";
+  const message = e instanceof Error ? e.message : 'Internal error';
 
   return new Response(JSON.stringify({ error: message }), {
     status,
-    headers: { "Content-Type": "application/json", ...corsHeaders, ...headers },
+    headers: { 'Content-Type': 'application/json', ...corsHeaders, ...headers },
   });
 }

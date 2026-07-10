@@ -1,19 +1,23 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { format } from "date-fns";
-import { Calendar as CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
+import { useEffect, useRef, useState } from 'react';
+import { format } from 'date-fns';
+import { Calendar as CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
 
-import { Input } from "@/components/ui/input";
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Command,
   CommandEmpty,
@@ -21,21 +25,24 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useTeamMembers } from "@/hooks/useTeam";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import type { ProductFilters as ProductFiltersType } from "@/types/types";
+} from '@/components/ui/command';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useTeamMembers } from '@/hooks/useTeam';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import type { ProductFilters as ProductFiltersType } from '@/types/types';
 
 type ProductFiltersProps = {
   filters: ProductFiltersType;
   onFiltersChange: (filters: ProductFiltersType) => void;
 };
 
-export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps) {
+export function ProductFilters({
+  filters,
+  onFiltersChange,
+}: ProductFiltersProps) {
   const { data: members } = useTeamMembers();
-  const [searchInput, setSearchInput] = useState(filters.search ?? "");
+  const [searchInput, setSearchInput] = useState(filters.search ?? '');
   const debouncedSearch = useDebouncedValue(searchInput, 300);
   const [creatorOpen, setCreatorOpen] = useState(false);
 
@@ -45,9 +52,13 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
   });
 
   useEffect(() => {
-    const { filters: currentFilters, onFiltersChange: currentOnFiltersChange } = latest.current;
-    if (debouncedSearch !== (currentFilters.search ?? "")) {
-      currentOnFiltersChange({ ...currentFilters, search: debouncedSearch || undefined });
+    const { filters: currentFilters, onFiltersChange: currentOnFiltersChange } =
+      latest.current;
+    if (debouncedSearch !== (currentFilters.search ?? '')) {
+      currentOnFiltersChange({
+        ...currentFilters,
+        search: debouncedSearch || undefined,
+      });
     }
   }, [debouncedSearch]);
 
@@ -68,11 +79,14 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
       />
 
       <Select
-        value={filters.status ?? "all"}
+        value={filters.status ?? 'all'}
         onValueChange={(value) =>
           onFiltersChange({
             ...filters,
-            status: value === "all" ? undefined : (value as ProductFiltersType["status"]),
+            status:
+              value === 'all'
+                ? undefined
+                : (value as ProductFiltersType['status']),
           })
         }
       >
@@ -93,13 +107,14 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
           {dateRange.from ? (
             dateRange.to ? (
               <>
-                {format(dateRange.from, "MMM d")} - {format(dateRange.to, "MMM d")}
+                {format(dateRange.from, 'MMM d')} -{' '}
+                {format(dateRange.to, 'MMM d')}
               </>
             ) : (
-              format(dateRange.from, "MMM d, yyyy")
+              format(dateRange.from, 'MMM d, yyyy')
             )
           ) : (
-            "Date range"
+            'Date range'
           )}
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
@@ -109,8 +124,10 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
             onSelect={(range) =>
               onFiltersChange({
                 ...filters,
-                dateFrom: range?.from ? format(range.from, "yyyy-MM-dd") : undefined,
-                dateTo: range?.to ? format(range.to, "yyyy-MM-dd") : undefined,
+                dateFrom: range?.from
+                  ? format(range.from, 'yyyy-MM-dd')
+                  : undefined,
+                dateTo: range?.to ? format(range.to, 'yyyy-MM-dd') : undefined,
               })
             }
             numberOfMonths={2}
@@ -119,8 +136,12 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
       </Popover>
 
       <Popover open={creatorOpen} onOpenChange={setCreatorOpen}>
-        <PopoverTrigger render={<Button variant="outline" className="justify-between" />}>
-          <span className="truncate">{selectedCreator?.displayName ?? "Any creator"}</span>
+        <PopoverTrigger
+          render={<Button variant="outline" className="justify-between" />}
+        >
+          <span className="truncate">
+            {selectedCreator?.displayName ?? 'Any creator'}
+          </span>
           <ChevronsUpDown className="size-4 opacity-50" />
         </PopoverTrigger>
         <PopoverContent className="w-56 p-0" align="start">
@@ -136,7 +157,10 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
                   }}
                 >
                   <Check
-                    className={cn("size-4", !filters.createdBy ? "opacity-100" : "opacity-0")}
+                    className={cn(
+                      'size-4',
+                      !filters.createdBy ? 'opacity-100' : 'opacity-0',
+                    )}
                   />
                   Any creator
                 </CommandItem>
@@ -151,8 +175,10 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
                   >
                     <Check
                       className={cn(
-                        "size-4",
-                        filters.createdBy === member.id ? "opacity-100" : "opacity-0",
+                        'size-4',
+                        filters.createdBy === member.id
+                          ? 'opacity-100'
+                          : 'opacity-0',
                       )}
                     />
                     {member.displayName}

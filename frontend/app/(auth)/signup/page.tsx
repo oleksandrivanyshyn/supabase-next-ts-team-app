@@ -1,5 +1,5 @@
-import { SignUpForm } from "@/components/auth/sign-up-form";
-import { GoogleAuthButton } from "@/components/auth/google-auth-button";
+import { SignUpForm } from '@/components/auth/SignUpForm';
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 
 export default function SignupPage() {
   return (

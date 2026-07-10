@@ -1,14 +1,18 @@
-import { useCallback, useMemo, useState } from "react";
-import { useDropzone, type FileError, type FileRejection } from "react-dropzone";
+import { useCallback, useMemo, useState } from 'react';
+import {
+  useDropzone,
+  type FileError,
+  type FileRejection,
+} from 'react-dropzone';
 
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from '@/lib/supabase/client';
 
 const supabase = createClient();
 
-interface FileWithPreview extends File {
+type FileWithPreview = File & {
   preview: string;
   errors: readonly FileError[];
-}
+};
 
 type UseSupabaseUploadOptions = {
   bucketName: string;
@@ -22,7 +26,7 @@ type UseSupabaseUploadOptions = {
 
 type UseSupabaseUploadReturn = ReturnType<typeof useSupabaseUpload>;
 
-const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
+function useSupabaseUpload(options: UseSupabaseUploadOptions) {
   const {
     bucketName,
     path,
@@ -74,7 +78,10 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
   const dropzoneProps = useDropzone({
     onDrop,
     noClick: true,
-    accept: allowedMimeTypes.reduce((acc, type) => ({ ...acc, [type]: [] }), {}),
+    accept: allowedMimeTypes.reduce(
+      (acc, type) => ({ ...acc, [type]: [] }),
+      {},
+    ),
     maxSize: maxFileSize,
     maxFiles: maxFiles,
     multiple: maxFiles !== 1,
@@ -132,11 +139,15 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
     }
 
     if (files.length <= maxFiles) {
-      const changed = files.some((file) => file.errors.some((e) => e.code === "too-many-files"));
+      const changed = files.some((file) =>
+        file.errors.some((e) => e.code === 'too-many-files'),
+      );
       if (changed) {
         const newFiles = files.map((file) => {
-          if (file.errors.some((e) => e.code === "too-many-files")) {
-            file.errors = file.errors.filter((e) => e.code !== "too-many-files");
+          if (file.errors.some((e) => e.code === 'too-many-files')) {
+            file.errors = file.errors.filter(
+              (e) => e.code !== 'too-many-files',
+            );
           }
           return file;
         });
@@ -159,6 +170,10 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
     allowedMimeTypes,
     ...dropzoneProps,
   };
-};
+}
 
-export { useSupabaseUpload, type UseSupabaseUploadOptions, type UseSupabaseUploadReturn };
+export {
+  useSupabaseUpload,
+  type UseSupabaseUploadOptions,
+  type UseSupabaseUploadReturn,
+};

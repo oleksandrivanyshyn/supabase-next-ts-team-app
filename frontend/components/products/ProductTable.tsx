@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import { format } from "date-fns";
-import { MoreHorizontal } from "lucide-react";
+import Image from 'next/image';
+import { format } from 'date-fns';
+import { MoreHorizontal } from 'lucide-react';
 
 import {
   Table,
@@ -11,19 +11,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { StatusBadge } from "@/components/products/StatusBadge";
-import { useUpdateProduct } from "@/hooks/useProducts";
-import type { ProductListItem } from "@/types/types";
-import { toast } from "sonner";
+} from '@/components/ui/dropdown-menu';
+import { StatusBadge } from '@/components/products/StatusBadge';
+import { useUpdateProduct } from '@/hooks/useProducts';
+import type { ProductListItem } from '@/types/types';
+import { toast } from 'sonner';
 
 type ProductTableProps = {
   products: ProductListItem[];
@@ -32,15 +32,22 @@ type ProductTableProps = {
   onDelete: (product: ProductListItem) => void;
 };
 
-export function ProductTable({ products, isLoading, onEdit, onDelete }: ProductTableProps) {
+export function ProductTable({
+  products,
+  isLoading,
+  onEdit,
+  onDelete,
+}: ProductTableProps) {
   const updateProduct = useUpdateProduct();
 
   const activate = async (product: ProductListItem) => {
     try {
-      await updateProduct.mutateAsync({ id: product.id, status: "active" });
-      toast.success("Product activated");
+      await updateProduct.mutateAsync({ id: product.id, status: 'active' });
+      toast.success('Product activated');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(
+        error instanceof Error ? error.message : 'Something went wrong',
+      );
     }
   };
 
@@ -69,7 +76,10 @@ export function ProductTable({ products, isLoading, onEdit, onDelete }: ProductT
 
         {!isLoading && products.length === 0 && (
           <TableRow>
-            <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+            <TableCell
+              colSpan={7}
+              className="text-center text-muted-foreground py-8"
+            >
               No products found.
             </TableCell>
           </TableRow>
@@ -99,16 +109,22 @@ export function ProductTable({ products, isLoading, onEdit, onDelete }: ProductT
                 <StatusBadge status={product.status} />
               </TableCell>
               <TableCell>{product.createdBy.displayName}</TableCell>
-              <TableCell>{format(new Date(product.createdAt), "MMM d, yyyy")}</TableCell>
+              <TableCell>
+                {format(new Date(product.createdAt), 'MMM d, yyyy')}
+              </TableCell>
               <TableCell>
                 <DropdownMenu>
-                  <DropdownMenuTrigger render={<Button variant="ghost" size="icon" />}>
+                  <DropdownMenuTrigger
+                    render={<Button variant="ghost" size="icon" />}
+                  >
                     <MoreHorizontal className="size-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    {product.status === "draft" && (
+                    {product.status === 'draft' && (
                       <>
-                        <DropdownMenuItem onClick={() => onEdit(product)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit(product)}>
+                          Edit
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => activate(product)}>
                           Mark Active
                         </DropdownMenuItem>
@@ -120,9 +136,11 @@ export function ProductTable({ products, isLoading, onEdit, onDelete }: ProductT
                         </DropdownMenuItem>
                       </>
                     )}
-                    {product.status === "active" && (
+                    {product.status === 'active' && (
                       <>
-                        <DropdownMenuItem onClick={() => onEdit(product)}>View</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEdit(product)}>
+                          View
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           variant="destructive"
                           onClick={() => onDelete(product)}
@@ -131,8 +149,10 @@ export function ProductTable({ products, isLoading, onEdit, onDelete }: ProductT
                         </DropdownMenuItem>
                       </>
                     )}
-                    {product.status === "deleted" && (
-                      <DropdownMenuItem onClick={() => onEdit(product)}>View</DropdownMenuItem>
+                    {product.status === 'deleted' && (
+                      <DropdownMenuItem onClick={() => onEdit(product)}>
+                        View
+                      </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner";
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { toast } from 'sonner';
 
 import {
   Sheet,
@@ -13,18 +13,25 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-} from "@/components/ui/sheet";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Dropzone, DropzoneContent, DropzoneEmptyState } from "@/components/products/dropzone";
-import { useSupabaseUpload } from "@/hooks/useSupabaseUpload";
-import { useCreateProduct, useUpdateProduct } from "@/hooks/useProducts";
-import type { ProductListItem } from "@/types/types";
+} from '@/components/ui/sheet';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import {
+  Dropzone,
+  DropzoneContent,
+  DropzoneEmptyState,
+} from '@/components/products/Dropzone';
+import { useSupabaseUpload } from '@/hooks/useSupabaseUpload';
+import { useCreateProduct, useUpdateProduct } from '@/hooks/useProducts';
+import type { ProductListItem } from '@/types/types';
 
 const productSchema = z.object({
-  title: z.string().min(1, "Required").max(200, "Must be 200 characters or fewer"),
+  title: z
+    .string()
+    .min(1, 'Required')
+    .max(200, 'Must be 200 characters or fewer'),
   description: z.string().optional(),
 });
 
@@ -35,9 +42,14 @@ type ProductFormSheetProps = {
   teamId: string;
 };
 
-export function ProductFormSheet({ open, onOpenChange, product, teamId }: ProductFormSheetProps) {
-  const readOnly = product ? product.status !== "draft" : false;
-  const isDeleted = product?.status === "deleted";
+export function ProductFormSheet({
+  open,
+  onOpenChange,
+  product,
+  teamId,
+}: ProductFormSheetProps) {
+  const readOnly = product ? product.status !== 'draft' : false;
+  const isDeleted = product?.status === 'deleted';
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
 
@@ -48,12 +60,15 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
     formState: { errors },
   } = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
-    defaultValues: { title: "", description: "" },
+    defaultValues: { title: '', description: '' },
   });
 
   useEffect(() => {
     if (open) {
-      reset({ title: product?.title ?? "", description: product?.description ?? "" });
+      reset({
+        title: product?.title ?? '',
+        description: product?.description ?? '',
+      });
     }
   }, [open, product, reset]);
 
@@ -69,9 +84,9 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
   }
 
   const upload = useSupabaseUpload({
-    bucketName: "product-images",
+    bucketName: 'product-images',
     path: uploadPath,
-    allowedMimeTypes: ["image/png", "image/jpeg", "image/webp", "image/gif"],
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp', 'image/gif'],
     maxFileSize: 5 * 1024 * 1024,
     maxFiles: 1,
     upsert: true,
@@ -91,7 +106,9 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
 
   const onSubmit = handleSubmit(async (values) => {
     const uploadedPath =
-      upload.successes.length > 0 ? `${uploadPath}/${upload.successes[0]}` : undefined;
+      upload.successes.length > 0
+        ? `${uploadPath}/${upload.successes[0]}`
+        : undefined;
 
     try {
       if (product) {
@@ -101,18 +118,20 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
           description: values.description,
           ...(uploadedPath ? { imagePath: uploadedPath } : {}),
         });
-        toast.success("Product updated");
+        toast.success('Product updated');
       } else {
         await createProduct.mutateAsync({
           title: values.title,
           description: values.description,
           ...(uploadedPath ? { imagePath: uploadedPath } : {}),
         });
-        toast.success("Product created");
+        toast.success('Product created');
       }
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Something went wrong");
+      toast.error(
+        error instanceof Error ? error.message : 'Something went wrong',
+      );
     }
   });
 
@@ -120,19 +139,30 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>{product ? (readOnly ? "View product" : "Edit product") : "New product"}</SheetTitle>
+          <SheetTitle>
+            {product
+              ? readOnly
+                ? 'View product'
+                : 'Edit product'
+              : 'New product'}
+          </SheetTitle>
         </SheetHeader>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-4 px-4">
           <Field>
             <FieldLabel htmlFor="title">Title</FieldLabel>
-            <Input id="title" disabled={readOnly} {...register("title")} />
+            <Input id="title" disabled={readOnly} {...register('title')} />
             <FieldError errors={[errors.title]} />
           </Field>
 
           <Field>
             <FieldLabel htmlFor="description">Description</FieldLabel>
-            <Textarea id="description" disabled={readOnly} rows={4} {...register("description")} />
+            <Textarea
+              id="description"
+              disabled={readOnly}
+              rows={4}
+              {...register('description')}
+            />
             <FieldError errors={[errors.description]} />
           </Field>
 
@@ -157,13 +187,14 @@ export function ProductFormSheet({ open, onOpenChange, product, teamId }: Produc
           {!readOnly && (
             <SheetFooter className="px-0">
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Saving..." : "Save"}
+                {isPending ? 'Saving...' : 'Save'}
               </Button>
             </SheetFooter>
           )}
           {readOnly && !isDeleted && (
             <p className="text-sm text-muted-foreground">
-              Active products can only have their status changed, from the row menu.
+              Active products can only have their status changed, from the row
+              menu.
             </p>
           )}
         </form>
