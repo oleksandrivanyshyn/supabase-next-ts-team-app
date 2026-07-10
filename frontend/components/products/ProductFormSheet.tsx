@@ -105,10 +105,16 @@ export function ProductFormSheet({
   ) : null;
 
   const onSubmit = handleSubmit(async (values) => {
+    let successes = upload.successes;
+    if (upload.files.length > 0 && successes.length === 0) {
+      successes = await upload.onUpload();
+      if (successes.length === 0) {
+        toast.error('Image failed to upload. Please try again.');
+        return;
+      }
+    }
     const uploadedPath =
-      upload.successes.length > 0
-        ? `${uploadPath}/${upload.successes[0]}`
-        : undefined;
+      successes.length > 0 ? `${uploadPath}/${successes[0]}` : undefined;
 
     try {
       if (product) {

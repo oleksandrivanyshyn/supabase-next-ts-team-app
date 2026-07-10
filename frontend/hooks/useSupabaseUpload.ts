@@ -128,6 +128,8 @@ function useSupabaseUpload(options: UseSupabaseUploadOptions) {
     setSuccesses(newSuccesses);
 
     setLoading(false);
+
+    return newSuccesses;
   }, [files, path, bucketName, errors, successes, cacheControl, upsert]);
 
   const [prevFilesLength, setPrevFilesLength] = useState(files.length);
