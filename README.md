@@ -98,11 +98,13 @@ supabase db reset       # applies all migrations + seed.sql
 ### 2. Configure environment files
 
 ```bash
+cp .env.example .env
 cp supabase/.env.example supabase/.env
 cp frontend/.env.local.example frontend/.env.local
 ```
 
-- `supabase/.env` — Google OAuth credentials (optional for local unless testing Google), `CRON_SECRET`, and `PUBLIC_SUPABASE_URL` (see note below).
+- `.env` (repo root) — Google OAuth credentials, read by `supabase start` (optional for local unless testing Google sign-in).
+- `supabase/.env` — `CRON_SECRET` and `PUBLIC_SUPABASE_URL` (see note below).
 - `frontend/.env.local` — `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from `supabase status`.
 
 > **Local Storage gotcha:** inside Edge Functions the auto-injected `SUPABASE_URL`
@@ -132,8 +134,8 @@ Confirmation emails and password-reset links are caught by **Mailpit** at
 ### Google OAuth locally (optional)
 
 Requires a Google Cloud OAuth client with redirect URI
-`http://127.0.0.1:54321/auth/v1/callback`, the client id/secret in
-`supabase/.env`, and `supabase stop && supabase start` after editing
+`http://127.0.0.1:54321/auth/v1/callback`, the client id/secret in the
+repo-root `.env`, and `supabase stop && supabase start` after editing
 `config.toml` (its changes are not hot-reloaded).
 
 ---
